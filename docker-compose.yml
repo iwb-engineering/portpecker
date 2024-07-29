@@ -1,0 +1,27 @@
+version: "3"
+services:
+    portpecker:
+        build: .
+        networks:
+            portpecker-test-net:
+                ipv4_address: 172.20.0.2
+        volumes:
+            - ./config.json:/app/config.json
+
+    webserver:
+        image: alpine
+        command: sh -c "nc -l -p 80 & nc -l -p 443 & wait"
+        networks:
+            portpecker-test-net:
+                ipv4_address: 172.20.0.3
+
+    database:
+        image: alpine
+        command: nc -l -p 5432
+        networks:
+            portpecker-test-net:
+                ipv4_address: 172.20.0.4
+
+networks:
+    portpecker-test-net:
+        external: true

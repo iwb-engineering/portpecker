@@ -1,0 +1,19 @@
+{
+    "rules": [
+        {
+            "source": "172.20.0.2",
+            "destination": "172.20.0.3",
+            "ports": [
+                { "port": "80", "protocol": "TCP" },
+                { "port": "443", "protocol": "TCP" }
+            ],
+            "note": "Web server access"
+        },
+        {
+            "source": "172.20.0.2",
+            "destination": "172.20.0.4",
+            "ports": [{ "port": "5432", "protocol": "TCP" }],
+            "note": "Database access"
+        }
+    ]
+}
