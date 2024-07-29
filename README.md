@@ -10,17 +10,12 @@ PortPecker is a network checking tool designed to verify connectivity between ho
 -   Provides colorized and structured output for easy readability
 -   Runs in a Docker container for easy deployment and testing
 
-## Prerequisites
-
--   Docker
--   Docker Compose
-
 ## Quick Start
 
 1. Clone the repository:
 
 ```
-git clone https://github.com/yourusername/portpecker.git
+git clone https://github.com/iwb-engineering/portpecker.git
 cd portpecker
 ```
 
@@ -48,11 +43,11 @@ cd portpecker
 }
 ```
 
-3. Build and run the Docker environment:
-   `docker-compose up --build -d`
+3. Build and run:
 
-4. Check the logs to see the results:
-   `docker-compose logs portpecker`
+```
+go run .
+```
 
 ## Configuration
 
@@ -65,7 +60,7 @@ The config.json file defines the rules for network checking. Each rule has the f
     -   protocol: The protocol to use (TCP or UDP).
 -   note: A description of the rule.
 
-## Docker Environment
+## Testing
 
 The project uses Docker Compose to set up a testing environment with three containers:
 
