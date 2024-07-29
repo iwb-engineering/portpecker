@@ -6,23 +6,22 @@ on:
             - "v*"
 
 jobs:
-    release:
+    build:
+        name: Build and Release
         runs-on: ubuntu-latest
         strategy:
             matrix:
                 include:
-                    - os: windows
-                      arch: amd64
-                      ext: .exe
-                    - os: windows
-                      arch: 386
-                      ext: .exe
-                    - os: darwin
-                      arch: arm64
-                      ext: ""
+                    - goos: windows
+                      goarch: amd64
+                    - goos: windows
+                      goarch: 386
+                    - goos: darwin
+                      goarch: arm64
 
         steps:
-            - uses: actions/checkout@v3
+            - name: Checkout code
+              uses: actions/checkout@v3
 
             - name: Set up Go
               uses: actions/setup-go@v4
@@ -30,27 +29,39 @@ jobs:
                   go-version: "1.22"
 
             - name: Build
+              env:
+                  GOOS: ${{ matrix.goos }}
+                  GOARCH: ${{ matrix.goarch }}
               run: |
-                  mkdir -p builds
-                  GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o builds/portpecker-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
+                  binary_name="${{ github.event.repository.name }}_${{ matrix.goos }}_${{ matrix.goarch }}"
+                  if [ "${{ matrix.goos }}" = "windows" ]; then
+                    binary_name="${binary_name}.exe"
+                  fi
+                  go build -v -o $binary_name .
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v3
+              with:
+                  name: binaries
+                  path: ${{ github.event.repository.name }}_*
+
+    release:
+        name: Create Release
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Download artifacts
+              uses: actions/download-artifact@v3
+              with:
+                  name: binaries
 
             - name: Create Release
-              id: create_release
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ github.ref }}
-                  release_name: Release ${{ github.ref }}
-                  draft: false
-                  prerelease: false
-
-            - name: Upload Release Assets
-              uses: actions/upload-release-asset@v1
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./builds/portpecker-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
-                  asset_name: portpecker-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
-                  asset_content_type: application/octet-stream
+                  files: |
+                      ${{ github.event.repository.name }}_*
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
