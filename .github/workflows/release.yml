@@ -1,0 +1,56 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*"
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                include:
+                    - os: windows
+                      arch: amd64
+                      ext: .exe
+                    - os: windows
+                      arch: 386
+                      ext: .exe
+                    - os: darwin
+                      arch: arm64
+                      ext: ""
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Set up Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: "1.22"
+
+            - name: Build
+              run: |
+                  mkdir -p builds
+                  GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o builds/portpecker-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
+
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ github.ref }}
+                  release_name: Release ${{ github.ref }}
+                  draft: false
+                  prerelease: false
+
+            - name: Upload Release Assets
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./builds/portpecker-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
+                  asset_name: portpecker-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
+                  asset_content_type: application/octet-stream
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
